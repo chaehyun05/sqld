@@ -517,7 +517,8 @@ INSERT 4; COMMIT;  → 남는 것: 1, 4</pre>
 <h4>권한 (DCL)</h4>
 <ul><li><code>GRANT SELECT ON emp TO kim;</code> / <code>REVOKE ... FROM kim;</code></li><li><b>WITH GRANT OPTION</b>(객체 권한): 회수하면 <b>연쇄 회수</b></li><li><b>WITH ADMIN OPTION</b>(시스템 권한): 연쇄 회수 <b>안 됨</b></li><li>ROLE = 권한 묶음 (CONNECT, RESOURCE)</li></ul>`}
 ];
-const PLAN={1:['수','1과목 전부 + SQL 기초','u0~u4'],2:['목','2과목 전부 (NULL·JOIN부터)','u5~u10'],3:['금','총정리: 실전 모의 → 오답 → 약한 단원',''],4:['토','시험 날 아침: 카드만','']};
+const PLAN={1:['수','1과목 전부 + SQL 기초','u0~u4'],2:['목','2과목 전부 (NULL·JOIN부터)','u5~u10'],3:['금','총정리: 실전 모의 → 오답 → 약한 단원',''],4:['토','시험 당일 벼락치기 (약 2시간 40분)','']};
+const CORE=[1,4,5,6,7,11,16,18,19,20,21,24,28,31,32,33,36,37,38,39,41,43,45,48,51,53,54,65,77,80];
 
 // 보기별 해설: [①, ②, ③, ④, 외울 포인트]
 const D={
@@ -844,7 +845,21 @@ function dayTasks(d){
     weak.forEach(k=>{const u=STUDY.find(x=>x.p===k);tasks.push({kind:'read',label:'약한 단원 다시: '+u.t,sub:'정답률 70% 미만',done:0,total:1,act:()=>{openU=u.id;go('study')}})});
     if(!weak.length)tasks.push({kind:'read',label:'약한 단원 다시 보기',sub:'모의고사 후 정답률 70% 미만 파트가 여기에 떠',done:Object.keys(hist).length>=40?1:0,total:1,act:()=>go('study')});
   } else {
-    tasks.push({kind:'card',label:'암기 카드 전부 외우기',sub:`${known.size}/${CARDS.length}장`,done:known.size,total:CARDS.length,act:()=>go('cards')});
+    // 시험 당일 벼락치기: 점수 비중 순서, 시간 표시
+    const R=(id,min,why)=>{const u=STUDY.find(x=>x.id===id);tasks.push({kind:'read',label:`${u.t} 읽기 · ${min}분`,sub:why,done:readU.has(id)?1:0,total:1,act:()=>{openU=id;go('study')}})};
+    const C=CORE.filter(id=>hist[id]!==undefined).length;
+    R('u5',20,'NULL·함수 · 2과목 점수 제일 많이 걸림');
+    R('u6',15,'GROUP BY·JOIN 결과 행 수');
+    R('u1',10,'1과목: 모델링 3단계·스키마');
+    R('u2',10,'1과목: 엔터티 6특징·분류');
+    R('u3',10,'1과목: 식별자 4특징·식별/비식별');
+    R('u4',10,'1과목: 2NF vs 3NF·반정규화');
+    R('u7',10,'서브쿼리 ANY/ALL·NOT IN·집합');
+    R('u10',10,'관리 구문: 외우면 맞힘');
+    R('u8',15,'ROLLUP 행 수·RANK·누적합');
+    tasks.push({kind:'quiz',label:'핵심 30문제 풀기 · 30분',sub:`${C}/${CORE.length}문항 풀었어 · 틀린 건 해설만 읽기`,done:C,total:CORE.length,act:()=>start(shuffle(Q.filter(q=>CORE.includes(q.id))))});
+    R('u9',10,'시간 남으면: ROWNUM·계층형·정규식');
+    tasks.push({kind:'card',label:'시험장 가는 길: 암기 카드',sub:`${known.size}/${CARDS.length}장`,done:known.size,total:CARDS.length,act:()=>go('cards')});
   }
   return tasks;
 }
