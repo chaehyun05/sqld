@@ -168,6 +168,10 @@ details.unit[open] summary::after{transform:rotate(-135deg);margin-top:4px}
 .opt.bad{border-color:var(--bad)} .opt.bad .k{color:var(--bad)}
 .tipk{margin-top:10px;font-size:14px;font-weight:700;background:var(--accent-soft);color:var(--accent);border-radius:8px;padding:8px 10px}
 .exp .lbl{font-size:12px;font-weight:700;color:var(--muted);margin-top:10px;letter-spacing:.04em}
+.toptabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;display:grid;grid-template-columns:repeat(5,1fr);gap:4px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:4px;margin-bottom:12px}
+.toptabs button{border:0;background:none;color:var(--muted);font:inherit;font-size:14px;padding:8px 0;border-radius:8px;cursor:pointer;min-height:40px}
+.toptabs button[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);font-weight:700}
+.exitq{border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;padding:5px 10px;border-radius:999px;cursor:pointer}
 @media (min-width:640px){.quick{grid-template-columns:repeat(4,1fr)}}
 @media (prefers-reduced-motion:reduce){.bar i,.fc .in{transition:none}}
 </style>
@@ -177,6 +181,7 @@ details.unit[open] summary::after{transform:rotate(-135deg);margin-top:4px}
 
 <div class="wrap">
   <div class="top"><div class="brand"><span class="mono">SQLD</span> 포켓</div><span class="dday" id="dday"></span></div>
+  <nav class="toptabs" aria-label="화면 이동"><button data-tab="home">홈</button><button data-tab="study">개념</button><button data-tab="quiz">문제</button><button data-tab="cards">카드</button><button data-tab="wrong">오답</button></nav>
   <main id="view"></main>
 </div>
 <nav class="tabbar" role="tablist"><div class="in">
@@ -950,7 +955,7 @@ function renderQ(){
   const q=run.list[run.idx],picked=run.answers[q.id],done=picked!==undefined,total=run.list.length;
   const unit=STUDY.find(u=>u.p===q.p);
   view.innerHTML=`<section class="panel">
-   <div class="qhead"><span class="tag">${PARTS[q.p][1]}</span><span style="font-family:var(--f-mono)">${run.idx+1}/${total}</span></div>
+   <div class="qhead"><span class="tag">${PARTS[q.p][1]}</span><span class="row" style="gap:12px"><span style="font-family:var(--f-mono)">${run.idx+1}/${total}</span><button class="exitq" id="exitq">나가기 ✕</button></span></div>
    <div class="bar"><i style="width:${(run.idx+1)/total*100}%"></i></div>
    <p class="qtext"><span class="num">#${q.id}</span>${q.q}</p>${q.x||''}
    <div class="choices">${q.c.map((c,i)=>{let cls='';if(done){if(i===q.a)cls='ok';else if(i===picked)cls='bad'}
@@ -963,6 +968,7 @@ function renderQ(){
   view.querySelectorAll('.choice').forEach(b=>b.onclick=()=>pick(+b.dataset.i));
   document.getElementById('prev').onclick=()=>{run.idx--;render()};
   document.getElementById('next').onclick=next;
+  document.getElementById('exitq').onclick=()=>go(unit?'study':'home');
   document.getElementById('quit').onclick=()=>{run.finished=true;render();window.scrollTo(0,0)};
   const tu=document.getElementById('tounit');if(tu)tu.onclick=()=>{openU=unit.id;go('study')};
 }
@@ -1044,7 +1050,7 @@ function renderWrong(){
 }
 
 function render(){
-  document.querySelectorAll('.tabbar button').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
+  document.querySelectorAll('button[data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===tab));
   if(tab==='home')return renderHome();
   if(tab==='study')return renderStudy();
   if(tab==='cards')return renderCards();
@@ -1053,7 +1059,7 @@ function render(){
   if(run.finished)return renderResult();
   renderQ();
 }
-document.querySelectorAll('.tabbar button').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='quiz'&&tab==='quiz'&&run&&run.finished)run=null;go(b.dataset.tab)});
+document.querySelectorAll('button[data-tab]').forEach(b=>b.onclick=()=>{if(b.dataset.tab==='quiz'&&tab==='quiz'&&run&&run.finished)run=null;go(b.dataset.tab)});
 document.addEventListener('keydown',e=>{
   if(tab!=='quiz'||!run||run.finished)return;
   if(['1','2','3','4'].includes(e.key))pick(+e.key-1);
